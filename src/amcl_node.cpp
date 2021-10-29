@@ -219,7 +219,7 @@ class AmclNode
     pf_t *pf_;
     double pf_err_, pf_z_;
     bool pf_init_;
-    pf_vector_t pf_odom_pose_;
+    pf_vector_t pf_odom_pose_; // Pose at last filter update
     double d_thresh_, a_thresh_;
     int resample_interval_;
     int resample_count_;
@@ -1192,7 +1192,7 @@ AmclNode::laserReceived(const sensor_msgs::LaserScanConstPtr& laser_scan)
   }
 
   // Where was the robot when this scan was taken?
-  pf_vector_t pose;
+  pf_vector_t pose; // It gets the pose from TF tree!
   if(!getOdomPose(latest_odom_pose_, pose.v[0], pose.v[1], pose.v[2],
                   laser_scan->header.stamp, base_frame_id_))
   {
@@ -1202,6 +1202,8 @@ AmclNode::laserReceived(const sensor_msgs::LaserScanConstPtr& laser_scan)
 
 
   pf_vector_t delta = pf_vector_zero();
+  // Delta is the diff between last filter update and pose
+  // when the laser data was got
 
   if(pf_init_)
   {
@@ -1305,15 +1307,19 @@ AmclNode::laserReceived(const sensor_msgs::LaserScanConstPtr& laser_scan)
     ROS_DEBUG("Laser %d angles in base frame: min: %.3f inc: %.3f", laser_index, angle_min, angle_increment);
 
     // Apply range min/max thresholds, if the user supplied them
+    // Basically if it gets from ros param, otherwise it gets
+    // from the laser_scan message.
     if(laser_max_range_ > 0.0)
       ldata.range_max = std::min(laser_scan->range_max, (float)laser_max_range_);
     else
       ldata.range_max = laser_scan->range_max;
+
     double range_min;
     if(laser_min_range_ > 0.0)
       range_min = std::max(laser_scan->range_min, (float)laser_min_range_);
     else
       range_min = laser_scan->range_min;
+
     // The AMCLLaserData destructor will free this memory
     ldata.ranges = new double[ldata.range_count][2]; // rho, theta
     ROS_ASSERT(ldata.ranges);

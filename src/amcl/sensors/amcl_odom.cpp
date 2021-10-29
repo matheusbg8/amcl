@@ -119,6 +119,10 @@ bool AMCLOdom::UpdateAction(pf_t *pf, AMCLSensorData *data)
   // Compute the new sample poses
   pf_sample_set_t *set;
 
+  // This is a hack to always keep the last
+  // particles state, current is changing
+  // between 0 and 1 all the time to point
+  // to the most recent particle set
   set = pf->sets + pf->current_set;
   pf_vector_t old_pose = pf_vector_sub(ndata->pose, ndata->delta);
 
@@ -310,6 +314,7 @@ bool AMCLOdom::UpdateAction(pf_t *pf, AMCLSensorData *data)
     double delta_trans, delta_rot, delta_bearing;
     double delta_trans_hat, delta_rot_hat, delta_strafe_hat;
 
+    // Delta is the displacement since last filter update pose
     // Translation length
     delta_trans = sqrt(ndata->delta.v[0]*ndata->delta.v[0] +
                        ndata->delta.v[1]*ndata->delta.v[1]);

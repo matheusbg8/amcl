@@ -100,11 +100,6 @@ private:
             const Scalar &color,
             int thickness);
 
-  // === Odometry ====
-
-  Odometry odom;
-
-
   // ===== Class control ======
   Mat lastSonSmall;
   double lastTime, lastX, lastY, lastYaw;
@@ -130,10 +125,6 @@ private:
   // Methods
   bool setup();
   
-  bool initPF();
-  void iniPFRandom();
-  void iniPFWithGuess(double x,double y, double theta);
-
   void sonCallback(const sensor_msgs::ImageConstPtr& msg);
 
   void poseCallback(const geometry_msgs::PoseStamped &msg);

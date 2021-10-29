@@ -146,7 +146,7 @@ bool AMCLLaser::UpdateSensor(pf_t *pf, AMCLSensorData *data)
   else if(this->model_type == SONAR_QUAD_NET)
   {
 //    cout << 3 << endl;
-    pf_update_sensor(pf, (pf_sensor_model_fn_t) LikelihoodFieldModelProb, data);
+    pf_update_sensor(pf, (pf_sensor_model_fn_t) QuadNetModel, data);
   }
   else
   {
@@ -547,7 +547,7 @@ double AMCLLaser::QuadNetModel(AMCLLaserData *data, pf_sample_set_t *set)
 
 
   // Compute the sample weights
-  for (j = 0; j < set->sample_count; j++)njfjfjhhf
+  for (j = 0; j < set->sample_count; j++) // stop here
   {
     sample = set->samples + j;
     pose = sample->pose;

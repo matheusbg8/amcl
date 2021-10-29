@@ -84,12 +84,6 @@ void QuadNetNode::sonCallback(const sensor_msgs::ImageConstPtr &msg)
 {
   ros::Time time_begin = ros::Time::now();
 
-  if(!pf->initialized())
-  {
-    initPF();
-    return ; // PF was not running
-  }
-
   // Check comunication status
   checkSonEvalTimming();
 
@@ -139,8 +133,8 @@ void QuadNetNode::rankCallback(const quad_amcl::StampedArrayFloat &msg)
 {
   ros::Time time_begin = ros::Time::now();
 
-  pf->updateWeights(msg.data);
-  pf->resample(sigma_pos);
+//  pf->updateWeights(msg.data);
+//  pf->resample(sigma_pos);
 
   pfComunicationState = READY;
   updateParticlesView(msg.header.stamp);
@@ -174,84 +168,84 @@ void QuadNetNode::checkSonEvalTimming()
 
 void QuadNetNode::updateMapView(const ros::Time &time)
 {
-  Mat screen = sat.getMapImg();
-  string txt;
-  const vector<Particle> &ps = pf->getParticles();
+//  Mat screen = sat.getMapImg();
+//  string txt;
+//  const vector<Particle> &ps;// = pf->getParticles();
 
-  // Particles Color version
-//  double minW, maxW;
-//  pf->getMinMaxWieght(minW,maxW);
+//  // Particles Color version
+////  double minW, maxW;
+////  pf->getMinMaxWieght(minW,maxW);
 
-  // Draw particles
-  for(uint i = 0; i < ps.size();i++)
-  {
-    const Particle &p = ps[i];
-
-    drawParticle(screen,
-                 p,txt,
-                 Scalar(255,0,255),2);
-
-    // Particles Color version
-//    double normW=1.0;
-//    if(maxW != minW)
-//      normW=(p.weight-minW)/(maxW-minW);
-//    const Vec3b& cPix = colors.at<Vec3b>(0,normW*255);
+//  // Draw particles
+//  for(uint i = 0; i < ps.size();i++)
+//  {
+//    const Particle &p = ps[i];
 
 //    drawParticle(screen,
 //                 p,txt,
-//                 Scalar(cPix[0],cPix[1],cPix[2]),2);
-  }
+//                 Scalar(255,0,255),2);
 
-  // Draw Odom
-  {
-    Particle p;
-    odom.predict(time.toSec(),
-                 p.x,p.y,p.theta);
-    txt="ODOM";
+//    // Particles Color version
+////    double normW=1.0;
+////    if(maxW != minW)
+////      normW=(p.weight-minW)/(maxW-minW);
+////    const Vec3b& cPix = colors.at<Vec3b>(0,normW*255);
 
-    drawParticle(screen,
-                 p,txt,
-                 Scalar(128,255,128),6);
-  }
+////    drawParticle(screen,
+////                 p,txt,
+////                 Scalar(cPix[0],cPix[1],cPix[2]),2);
+//  }
 
-  // Draw GT
-  {
-    Particle p;
-    p.x = lastX; p.y = lastY;
-    p.theta = lastYaw;
-    txt="GT";
+//  // Draw Odom
+////  {
+////    Particle p;
+////    odom.predict(time.toSec(),
+////                 p.x,p.y,p.theta);
+////    txt="ODOM";
 
-    drawParticle(screen,
-                 p,txt,
-                 Scalar(0,255,255),12);
-  }
+////    drawParticle(screen,
+////                 p,txt,
+////                 Scalar(128,255,128),6);
+////  }
 
-  // Draw best particle
-  {
-    Particle p;
-//    pf->getBestParticle(p);
-    pf->getBestAverageParticle(120,p);
+//  // Draw GT
+//  {
+//    Particle p;
+//    p.x = lastX; p.y = lastY;
+//    p.theta = lastYaw;
+//    txt="GT";
 
-    drawParticle(screen,
-             p,format("PF_Best"),
-             Scalar(0,0,0),12);
-  }
+//    drawParticle(screen,
+//                 p,txt,
+//                 Scalar(0,255,255),12);
+//  }
 
-  // Resize img
-  double s = 900.0/screen.cols;
-  resize(screen,screen,Size(),s,s);
+//  // Draw best particle
+//  {
+////    Particle p;
+////    pf->getBestParticle(p);
+////    pf->getBestAverageParticle(120,p);
 
-  // Show img on screen
-  if(showImgMap)
-  {
-    imshow("Test", screen);
-    waitKey(10);
-  }
+////    drawParticle(screen,
+////             p,format("PF_Best"),
+////             Scalar(0,0,0),12);
+//  }
 
-  // Publish msg
-  sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", screen).toImageMsg();
-  msg->header.stamp = time;
-  pubMapImg.publish(msg);
+//  // Resize img
+//  double s = 900.0/screen.cols;
+//  resize(screen,screen,Size(),s,s);
+
+//  // Show img on screen
+//  if(showImgMap)
+//  {
+//    imshow("Test", screen);
+//    waitKey(10);
+//  }
+
+//  // Publish msg
+//  sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", screen).toImageMsg();
+//  msg->header.stamp = time;
+//  pubMapImg.publish(msg);
 
 }
 
@@ -259,70 +253,70 @@ void QuadNetNode::updateParticlesView(const ros::Time &time)
 {
   Mat screen(600,800,CV_8UC3, Scalar(0,0,0));
 
-  vector<Particle> ps = pf->getParticles();
-  sort(ps.begin(),ps.end(),descendingParticles);
+//  vector<Particle> ps = pf->getParticles();
+//  sort(ps.begin(),ps.end(),descendingParticles);
 
-  uint t = ps.size(),n,m;
-  {
-    double r = double(screen.cols)/double(screen.rows),
-         ri = 256.0/128.0,
-        rf= r/ri,
-        dm=sqrt(t/rf),// +1, // Plus one line to fit son img
-        dn = rf*dm;
-        m = int(ceil(dm));
-        n = int(ceil(dn));
-  }
+//  uint t = ps.size(),n,m;
+//  {
+//    double r = double(screen.cols)/double(screen.rows),
+//         ri = 256.0/128.0,
+//        rf= r/ri,
+//        dm=sqrt(t/rf),// +1, // Plus one line to fit son img
+//        dn = rf*dm;
+//        m = int(ceil(dm));
+//        n = int(ceil(dn));
+//  }
 
-  uint cellW=screen.cols/n,
-       cellH=screen.rows/m,
-       k=0;
+//  uint cellW=screen.cols/n,
+//       cellH=screen.rows/m,
+//       k=0;
 
-  Mat img;
+//  Mat img;
 
-  for(uint i = 0; i < m && k < t; i++)
-  {
-    for(uint j = 0; j < n && k < t; j++)
-    {
-      const Particle &p = ps[k++];
-      uint x=j*cellW,y=i*cellH;
+//  for(uint i = 0; i < m && k < t; i++)
+//  {
+//    for(uint j = 0; j < n && k < t; j++)
+//    {
+//      const Particle &p = ps[k++];
+//      uint x=j*cellW,y=i*cellH;
 
-      img = sat.cropSonarFoV(Point2d(p.x,p.y),
-                             p.theta*180/M_PI,
-                             sonarRange,
-                             130.0);
+//      img = sat.cropSonarFoV(Point2d(p.x,p.y),
+//                             p.theta*180/M_PI,
+//                             sonarRange,
+//                             130.0);
 
-      if(img.empty())
-      {
-        ROS_ERROR("Could not crop sat img");
-        continue;
-      }
+//      if(img.empty())
+//      {
+//        ROS_ERROR("Could not crop sat img");
+//        continue;
+//      }
 
-      resize(img,img,Size(cellW,cellH));
-      putText(img,format("%.1f",p.weight*100.0),
-              Point(img.cols/2-15*3,img.rows-15),
-              FONT_HERSHEY_DUPLEX,
-              1.0,Scalar(255,0,255),1);
+//      resize(img,img,Size(cellW,cellH));
+//      putText(img,format("%.1f",p.weight*100.0),
+//              Point(img.cols/2-15*3,img.rows-15),
+//              FONT_HERSHEY_DUPLEX,
+//              1.0,Scalar(255,0,255),1);
 
-      img.copyTo(screen(Rect(x,y,cellW,cellH)));
-    }
-  }
+//      img.copyTo(screen(Rect(x,y,cellW,cellH)));
+//    }
+//  }
 
-  if(showParticlesView)
-  {
-    imshow("Particles", screen);
-    waitKey(10);
-  }
+//  if(showParticlesView)
+//  {
+//    imshow("Particles", screen);
+//    waitKey(10);
+//  }
 
-  sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", screen).toImageMsg();
+//  sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", screen).toImageMsg();
 
-  msg->header.stamp = time;
-  pubParticlesView.publish(msg);
+//  msg->header.stamp = time;
+//  pubParticlesView.publish(msg);
 }
 
 QuadNetNode::QuadNetNode():
     pnh("~"),
-    it(nh),
     r(4.0),
+    it(nh),
     colors(1,256,CV_8UC1)
 {
   for(uint i =0 ;i < 256; i++)
@@ -338,8 +332,6 @@ bool QuadNetNode::start()
   // Load maps
   if(!setup()) return false;
 //  ROS_INFO_STREAM("Setup completed!");
-
-  initPF();
 
   ros::spin();
 
@@ -359,58 +351,58 @@ void QuadNetNode::getweights()
 
 void QuadNetNode::evaluateParticlesObservation(const ros::Time &time)
 {
-  if(pfComunicationState != READY || lastSonSmall.empty())
-  {
-    ROS_WARN("ParticleFilter not ready to send msgs!");
-    return;
-  }
+//  if(pfComunicationState != READY || lastSonSmall.empty())
+//  {
+//    ROS_WARN("ParticleFilter not ready to send msgs!");
+//    return;
+//  }
 
-  const vector<Particle> &ps = pf->getParticles();
+//  const vector<Particle> &ps = pf->getParticles();
 
-  // Predict particle pose on this instant
-  pf->prediction(time.toSec(),sigma_pos);
+//  // Predict particle pose on this instant
+//  pf->prediction(time.toSec(),sigma_pos);
 
-  // Sending num. of particles
-  {
-    quad_amcl::StampedInteger msg;
-    msg.header.stamp = time;
-    msg.data = ps.size();
-    pubNumParticles.publish(msg);
-  }
+//  // Sending num. of particles
+//  {
+//    quad_amcl::StampedInteger msg;
+//    msg.header.stamp = time;
+//    msg.data = ps.size();
+//    pubNumParticles.publish(msg);
+//  }
 
-  // Publishing son image
-  {
-    sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(),
-                                                   "bgr8", lastSonSmall).toImageMsg();
-    msg->header.stamp = time;
-    pubSonImg.publish(msg);
-  }
+//  // Publishing son image
+//  {
+//    sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(),
+//                                                   "bgr8", lastSonSmall).toImageMsg();
+//    msg->header.stamp = time;
+//    pubSonImg.publish(msg);
+//  }
 
-  // Publishing sat imgs (Particles)
-  for(int i=0; i < ps.size(); i++)
-  {
-    const Particle &p = ps[i];
-
-
-    Mat img = sat.cropSonarFoV(Point2d(p.x,p.y),
-                               p.theta*180/M_PI,
-                               sonarRange,
-                               130.0);
-    if(img.empty())
-    {
-      ROS_ERROR("Could not crop sat img");
-      continue;
-    }
-
-    resize(img,img,Size(256,128));
-
-    sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg();
-    msg->header.stamp = time;
-    pubSatImgs.publish(msg);
-  }
+//  // Publishing sat imgs (Particles)
+//  for(int i=0; i < ps.size(); i++)
+//  {
+//    const Particle &p = ps[i];
 
 
-  pfComunicationState = WAITING_EVALUATION;
-  ROS_INFO("PF Waiting img evaluation!");
+//    Mat img = sat.cropSonarFoV(Point2d(p.x,p.y),
+//                               p.theta*180/M_PI,
+//                               sonarRange,
+//                               130.0);
+//    if(img.empty())
+//    {
+//      ROS_ERROR("Could not crop sat img");
+//      continue;
+//    }
+
+//    resize(img,img,Size(256,128));
+
+//    sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg();
+//    msg->header.stamp = time;
+//    pubSatImgs.publish(msg);
+//  }
+
+
+//  pfComunicationState = WAITING_EVALUATION;
+//  ROS_INFO("PF Waiting img evaluation!");
 
 }
